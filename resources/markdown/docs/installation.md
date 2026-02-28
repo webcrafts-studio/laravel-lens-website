@@ -28,7 +28,7 @@ npm install -g puppeteer
 ## Installing the Package
 
 ```bash
-composer require laravel-lens/laravel-lens --dev
+composer require webcrafts-studio/laravel-lens --dev
 ```
 
 > Laravel Lens is a developer tool and should be installed as a dev dependency. It is disabled by default in all non-local environments.
