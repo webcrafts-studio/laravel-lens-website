@@ -10,6 +10,12 @@ Run a single-URL audit against your local app:
 php artisan lens:audit http://your-app.test
 ```
 
+The URL argument is optional. If omitted, Lens defaults to your application's `APP_URL`:
+
+```bash
+php artisan lens:audit
+```
+
 Lens will launch a headless browser, inject Axe-core into the page, collect all violations, attempt to locate each violation in your Blade files, and render a diagnostic table.
 
 ### Example Output

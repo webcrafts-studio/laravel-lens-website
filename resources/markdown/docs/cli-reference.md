@@ -5,12 +5,12 @@ Lens for Laravel ships a single Artisan command: `lens:audit`. It is the primary
 ## Command Signature
 
 ```bash
-php artisan lens:audit {url*} [options]
+php artisan lens:audit {url?*} [options]
 ```
 
 ## Arguments
 
-### `url*`
+### `url?*`
 
 **Type:** `string[]` | **Required:** No (defaults to `APP_URL`)
 

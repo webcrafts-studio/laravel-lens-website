@@ -77,7 +77,7 @@ Each violation in the log is displayed as a card with:
 
 1. Click **AI FIX** on a violation card
 2. Lens calls the `/lens-for-laravel/fix/suggest` endpoint
-3. The AI analyses the failing node and Blade context (±20 lines)
+3. The AI analyses the failing node and Blade context (±20 lines, automatically expanded to include the matching closing tag for large elements)
 4. A side panel shows the **original code** and **proposed fix** side by side with an explanation
 5. Click **APPLY** to write the fix to disk, or **DISMISS** to discard it
 

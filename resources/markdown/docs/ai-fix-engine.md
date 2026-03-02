@@ -28,6 +28,8 @@ Line 116:         </a>
 ...
 ```
 
+**Automatic closing-tag expansion:** if the failing element's closing tag falls outside the initial ±20 line window (e.g., a large `<section>` or `<div>` block), Lens automatically expands the context downward using depth-counting until the matching closing tag is included. This ensures that when the AI renames an element (e.g., `<div>` → `<header>`), it can see and update the closing tag too — preventing mismatched markup such as `<header>…</div>`.
+
 ### 3. Prompt Construction
 
 The AI prompt contains:
@@ -85,7 +87,7 @@ Then add the corresponding API key:
 
 | Provider | Environment variable |
 |----------|---------------------|
-| `gemini` | `GOOGLE_API_KEY` |
+| `gemini` | `GEMINI_API_KEY` |
 | `openai` | `OPENAI_API_KEY` |
 | `anthropic` | `ANTHROPIC_API_KEY` |
 
@@ -95,7 +97,7 @@ See [Configuration](/docs/configuration) for the full `ai_provider` option refer
 
 - **Heuristic accuracy:** FileLocator uses best-effort heuristics to find Blade source locations. The mapped file and line number may occasionally be incorrect, especially for deeply nested components or dynamically generated HTML.
 - **Stale fixes:** If you modify the Blade file between scanning and applying, the original code may not match, and the fix will be rejected.
-- **Context window:** Very large Blade files or those with complex nesting may confuse the AI context reading.
+- **Context window:** Lens automatically expands the context to include the matching closing tag for large elements. However, if the expanded block exceeds 8 000 characters, the fix will be rejected and you will be asked to apply it manually.
 - **Provider availability:** The AI Fix Engine requires an active internet connection and a valid API key for your configured provider.
 
 > Automated AI fixes should be **reviewed before committing**. Always verify the generated fix resolves the violation without introducing regressions.
