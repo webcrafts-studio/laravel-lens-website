@@ -63,6 +63,12 @@
 
             {{-- Right: theme toggle + GitHub --}}
             <div class="flex items-center gap-3">
+                <button type="button" onclick="openDocsSearch()" aria-label="Search documentation"
+                    class="hidden md:flex h-9 min-w-48 items-center justify-between gap-3 border-2 border-black/20 dark:border-white/20 px-3 font-mono text-[10px] uppercase tracking-widest text-black/40 dark:text-white/40 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-colors">
+                    <span>Search docs...</span>
+                    <span class="text-[9px] text-black/30 dark:text-white/30">⌘K</span>
+                </button>
+
                 <button onclick="toggleTheme()" title="Toggle theme"
                     class="w-9 h-9 flex items-center justify-center border-2 border-black/20 dark:border-white/20 hover:border-black dark:hover:border-white text-black/50 dark:text-white/50 hover:text-black dark:hover:text-white transition-colors font-mono text-base">
                     <span class="dark:hidden" aria-label="Switch to dark">☾</span>
@@ -89,12 +95,14 @@
         class="fixed top-14 left-0 bottom-0 w-60 overflow-y-auto bg-white dark:bg-black border-r-2 border-black/10 dark:border-white/10 z-40 -translate-x-full xl:translate-x-0 transition-transform duration-200">
         {{-- Search --}}
         <div class="p-4 border-b border-black/10 dark:border-white/10">
-            <div
-                class="relative flex items-center border-2 border-black/20 dark:border-white/20 focus-within:border-[#e53e3e] transition-colors">
-                <span class="pl-3 text-black/30 dark:text-white/30 font-mono text-xs shrink-0">/</span>
-                <input id="docs-search" type="text" placeholder="Search docs..." autocomplete="off"
-                    class="flex-1 bg-transparent px-2 py-2 font-mono text-xs text-black dark:text-white placeholder-black/25 dark:placeholder-white/25 outline-none">
-            </div>
+            <button type="button" onclick="openDocsSearch()"
+                class="w-full flex items-center justify-between border-2 border-black/20 dark:border-white/20 px-3 py-2 font-mono text-xs text-black/45 dark:text-white/45 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-colors">
+                <span class="flex items-center gap-2">
+                    <span class="text-black/30 dark:text-white/30">/</span>
+                    <span>Search docs...</span>
+                </span>
+                <span class="text-[9px] text-black/30 dark:text-white/30">CTRL K</span>
+            </button>
         </div>
 
         {{-- Navigation --}}
@@ -106,7 +114,7 @@
                         {{ $section }}
                     </div>
                     @foreach ($items as $item)
-                        <a href="{{ route('docs.show', $item['slug']) }}" data-search="{{ strtolower($item['title']) }}"
+                        <a href="{{ route('docs.show', $item['slug']) }}"
                             class="nav-item block py-1.5 px-2 font-mono text-xs transition-colors border-l-2 {{ $currentSlug === $item['slug'] ? 'text-[#e53e3e] border-[#e53e3e] bg-[#e53e3e]/5' : 'text-black/60 dark:text-white/50 border-transparent hover:text-black dark:hover:text-white hover:border-black/20 dark:hover:border-white/20' }}"
                             @if ($currentSlug === $item['slug']) aria-current="page" @endif>
                             {{ $item['title'] }}
@@ -195,6 +203,56 @@
     </aside>
 
     {{-- ================================================== --}}
+    {{-- DOCS SEARCH MODAL                                  --}}
+    {{-- ================================================== --}}
+    <div id="docs-search-modal" class="fixed inset-0 z-[80] hidden" role="dialog" aria-modal="true"
+        aria-labelledby="docs-search-title">
+        <div class="absolute inset-0 bg-black/45 dark:bg-black/70 backdrop-blur-sm" onclick="closeDocsSearch()"></div>
+        <div class="relative mx-auto mt-20 w-[calc(100%-2rem)] max-w-2xl">
+            <div
+                class="overflow-hidden border-2 border-black dark:border-white bg-white dark:bg-black shadow-[8px_8px_0_0_rgba(0,0,0,0.18)] dark:shadow-[8px_8px_0_0_rgba(255,255,255,0.12)]">
+                <div class="flex items-center gap-3 border-b-2 border-black/10 dark:border-white/10 px-4">
+                    <span class="font-mono text-[#e53e3e] text-sm">/</span>
+                    <label id="docs-search-title" for="docs-search-input" class="sr-only">Search docs</label>
+                    <input id="docs-search-input" type="text" autocomplete="off" spellcheck="false"
+                        placeholder="Search Blade, React, Vue, scan history..."
+                        class="h-14 flex-1 bg-transparent font-mono text-sm text-black dark:text-white placeholder-black/30 dark:placeholder-white/30 outline-none">
+                    <button type="button" onclick="closeDocsSearch()"
+                        class="hidden sm:block border border-black/10 dark:border-white/10 px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white">
+                        ESC
+                    </button>
+                </div>
+
+                <div class="max-h-[55vh] overflow-y-auto">
+                    <div id="docs-search-results" class="divide-y divide-black/10 dark:divide-white/10"></div>
+                    <div id="docs-search-empty" class="hidden px-5 py-10 text-center">
+                        <p class="font-mono text-xs font-bold uppercase tracking-[0.25em] text-black dark:text-white">
+                            No results
+                        </p>
+                        <p class="mt-2 text-sm text-black/50 dark:text-white/45">
+                            Try a different keyword from the documentation content.
+                        </p>
+                    </div>
+                    <div id="docs-search-idle" class="px-5 py-10 text-center">
+                        <p class="font-mono text-xs font-bold uppercase tracking-[0.25em] text-black dark:text-white">
+                            Search all docs
+                        </p>
+                        <p class="mt-2 text-sm text-black/50 dark:text-white/45">
+                            Results include page titles, sections, and full markdown content.
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    class="flex items-center justify-between border-t border-black/10 dark:border-white/10 px-4 py-2 font-mono text-[9px] uppercase tracking-widest text-black/35 dark:text-white/35">
+                    <span>Enter to open</span>
+                    <span>Ctrl/⌘ K to search</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ================================================== --}}
     {{-- SCRIPTS                                             --}}
     {{-- ================================================== --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
@@ -211,20 +269,177 @@
             document.getElementById('sidebar-overlay').classList.add('hidden');
         }
 
-        /* ---- Client-side nav search ---- */
-        document.getElementById('docs-search').addEventListener('input', function() {
-            var q = this.value.toLowerCase().trim();
-            document.querySelectorAll('.nav-section').forEach(function(section) {
-                var visible = 0;
-                section.querySelectorAll('.nav-item').forEach(function(link) {
-                    var match = !q || link.dataset.search.includes(q);
-                    link.style.display = match ? '' : 'none';
-                    if (match) {
-                        visible++;
+        /* ---- Full-content docs search ---- */
+        var docsSearchIndex = {{ Illuminate\Support\Js::from($searchIndex) }};
+        var docsSearchResults = [];
+        var docsSearchSelectedIndex = 0;
+
+        function openDocsSearch() {
+            var modal = document.getElementById('docs-search-modal');
+            var input = document.getElementById('docs-search-input');
+
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            closeSidebar();
+
+            setTimeout(function() {
+                input.focus();
+                input.select();
+            }, 20);
+        }
+
+        function closeDocsSearch() {
+            var modal = document.getElementById('docs-search-modal');
+            var input = document.getElementById('docs-search-input');
+
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            input.value = '';
+            docsSearchResults = [];
+            docsSearchSelectedIndex = 0;
+            renderDocsSearchResults('');
+        }
+
+        function searchDocs(query) {
+            var normalizedQuery = query.toLowerCase().trim();
+
+            if (!normalizedQuery) {
+                return [];
+            }
+
+            var terms = normalizedQuery.split(/\s+/).filter(Boolean);
+
+            return docsSearchIndex.map(function(item) {
+                var title = item.title.toLowerCase();
+                var section = item.section.toLowerCase();
+                var content = item.content.toLowerCase();
+                var haystack = title + ' ' + section + ' ' + content;
+                var score = 0;
+
+                terms.forEach(function(term) {
+                    if (!haystack.includes(term)) {
+                        score -= 100;
+                        return;
+                    }
+
+                    if (title.includes(term)) {
+                        score += 80;
+                    }
+
+                    if (section.includes(term)) {
+                        score += 30;
+                    }
+
+                    if (content.includes(term)) {
+                        score += 10;
                     }
                 });
-                section.style.display = visible === 0 ? 'none' : '';
+
+                return {
+                    item: item,
+                    score: score,
+                    snippet: buildSearchSnippet(item.content, terms),
+                };
+            }).filter(function(result) {
+                return result.score > 0;
+            }).sort(function(a, b) {
+                return b.score - a.score || a.item.title.localeCompare(b.item.title);
+            }).slice(0, 8);
+        }
+
+        function buildSearchSnippet(content, terms) {
+            var lower = content.toLowerCase();
+            var firstMatch = -1;
+
+            terms.some(function(term) {
+                firstMatch = lower.indexOf(term);
+                return firstMatch !== -1;
             });
+
+            if (firstMatch === -1) {
+                return content.slice(0, 160);
+            }
+
+            var start = Math.max(0, firstMatch - 70);
+            var end = Math.min(content.length, firstMatch + 130);
+            var prefix = start > 0 ? '...' : '';
+            var suffix = end < content.length ? '...' : '';
+
+            return prefix + content.slice(start, end).trim() + suffix;
+        }
+
+        function renderDocsSearchResults(query) {
+            var resultsEl = document.getElementById('docs-search-results');
+            var idleEl = document.getElementById('docs-search-idle');
+            var emptyEl = document.getElementById('docs-search-empty');
+
+            resultsEl.innerHTML = '';
+            idleEl.classList.toggle('hidden', Boolean(query));
+            emptyEl.classList.toggle('hidden', !query || docsSearchResults.length > 0);
+
+            docsSearchResults.forEach(function(result, index) {
+                var link = document.createElement('a');
+                link.href = result.item.url;
+                link.className = [
+                    'block px-5 py-4 transition-colors',
+                    index === docsSearchSelectedIndex ?
+                    'bg-[#e53e3e]/10 dark:bg-[#e53e3e]/15' :
+                    'hover:bg-black/[0.03] dark:hover:bg-white/[0.04]',
+                ].join(' ');
+
+                var meta = document.createElement('div');
+                meta.className =
+                    'mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.3em] text-[#e53e3e]';
+                meta.textContent = result.item.section;
+
+                var title = document.createElement('div');
+                title.className = 'font-mono text-sm font-bold text-black dark:text-white';
+                title.textContent = result.item.title;
+
+                var snippet = document.createElement('p');
+                snippet.className = 'mt-1 line-clamp-2 text-sm leading-6 text-black/55 dark:text-white/50';
+                snippet.textContent = result.snippet;
+
+                link.appendChild(meta);
+                link.appendChild(title);
+                link.appendChild(snippet);
+                resultsEl.appendChild(link);
+            });
+        }
+
+        document.getElementById('docs-search-input').addEventListener('input', function() {
+            docsSearchResults = searchDocs(this.value);
+            docsSearchSelectedIndex = 0;
+            renderDocsSearchResults(this.value.trim());
+        });
+
+        document.getElementById('docs-search-input').addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowDown' && docsSearchResults.length) {
+                event.preventDefault();
+                docsSearchSelectedIndex = Math.min(docsSearchSelectedIndex + 1, docsSearchResults.length - 1);
+                renderDocsSearchResults(this.value.trim());
+            }
+
+            if (event.key === 'ArrowUp' && docsSearchResults.length) {
+                event.preventDefault();
+                docsSearchSelectedIndex = Math.max(docsSearchSelectedIndex - 1, 0);
+                renderDocsSearchResults(this.value.trim());
+            }
+
+            if (event.key === 'Enter' && docsSearchResults[docsSearchSelectedIndex]) {
+                window.location.href = docsSearchResults[docsSearchSelectedIndex].item.url;
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+                event.preventDefault();
+                openDocsSearch();
+            }
+
+            if (event.key === 'Escape' && !document.getElementById('docs-search-modal').classList.contains('hidden')) {
+                closeDocsSearch();
+            }
         });
 
         /* ---- Code block enhancement ---- */

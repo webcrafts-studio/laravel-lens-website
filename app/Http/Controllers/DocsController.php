@@ -54,6 +54,7 @@ class DocsController extends Controller
             'html' => $html,
             'toc' => $toc,
             'navigation' => $this->navigation,
+            'searchIndex' => $this->buildSearchIndex(),
             'currentSlug' => $page,
             'pageTitle' => $this->resolvePageTitle($page),
             'prev' => $prev,
@@ -98,6 +99,43 @@ class DocsController extends Controller
         }
 
         return ucwords(str_replace('-', ' ', $slug));
+    }
+
+    /**
+     * @return list<array{title: string, slug: string, section: string, url: string, content: string}>
+     */
+    private function buildSearchIndex(): array
+    {
+        $index = [];
+
+        foreach ($this->navigation as $section => $items) {
+            foreach ($items as $item) {
+                $path = resource_path("markdown/docs/{$item['slug']}.md");
+
+                if (! file_exists($path)) {
+                    continue;
+                }
+
+                $markdown = (string) file_get_contents($path);
+                $html = Str::markdown($markdown, [
+                    'html_input' => 'strip',
+                    'allow_unsafe_links' => false,
+                ]);
+
+                $index[] = [
+                    'title' => $item['title'],
+                    'slug' => $item['slug'],
+                    'section' => $section,
+                    'url' => route('docs.show', $item['slug']),
+                    'content' => Str::of(strip_tags($html))
+                        ->replaceMatches('/\s+/', ' ')
+                        ->trim()
+                        ->toString(),
+                ];
+            }
+        }
+
+        return $index;
     }
 
     /**
