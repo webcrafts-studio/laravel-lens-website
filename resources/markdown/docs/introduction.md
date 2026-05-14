@@ -17,16 +17,16 @@ When axe-core detects a violation, Lens shows the failing DOM element and attemp
 
 Located issues include a file path, line number, and `sourceType`: `blade`, `react`, or `vue`.
 
-## What's New in v2.0.0
+## What's New in v2.1.0
 
-- **React support** for source location and AI Fix
-- **Vue support** for source location and AI Fix
-- **Inertia-friendly discovery** for pages under `resources/js/Pages/**`
-- **Livewire-friendly scan timing** through `LENS_FOR_LARAVEL_SCAN_WAIT_MS`
-- **SPA crawler mode** with JavaScript-rendered link discovery
-- **Scan history** with trend data and scan comparison
-- **Source type labels** in the dashboard and scan payloads
-- **Expanded security checks** for AI-generated fixes
+- **Interactive state scans** for menus, modals, validation states, tabs, dropdowns, and other UI that appears after interaction
+- **Visual state recorder** for generating reusable interaction scripts in the dashboard
+- **`stateLabel` metadata** on issues found during interactive state scans
+- **State-aware history, PDF reports, and scan comparisons**
+- **Baseline quality gate** for failing CI only when new violations appear
+- **Dashboard localization** with English, Polish, Spanish, French, and German translations
+- **Local HTTPS support** for self-signed development certificates through `LENS_FOR_LARAVEL_IGNORE_HTTPS_ERRORS`
+- **Publishable translations** through the `lens-for-laravel-translations` tag
 
 ## Core Capabilities
 
@@ -35,10 +35,10 @@ Located issues include a file path, line number, and `sourceType`: `blade`, `rea
 - **Blade, React, Vue, Livewire, and Inertia support**
 - **Source locator** for Blade templates and frontend files under `resources/js`
 - **AI Fix Engine** using Gemini, OpenAI, or Anthropic
-- **Three scan modes**: single URL, multiple URLs, and whole-site crawl
+- **Four scan modes**: single URL, multiple URLs, whole-site crawl, and interactive states
 - **Optional SPA crawling** for React/Vue/Inertia link discovery
-- **Dashboard UI** with filtering, element preview, PDF export, AI fixes, and history
-- **Artisan CLI** with level filtering, crawl mode, thresholds, and CI integration
+- **Dashboard UI** with filtering, element preview, PDF export, AI fixes, history, and a state recorder
+- **Artisan CLI** with level filtering, crawl mode, thresholds, baseline files, and CI integration
 
 ## How It Works
 
@@ -58,7 +58,7 @@ Your Laravel App
       |         |
       |         +--> Blade / React / Vue file + line + sourceType
       |
-      +--> Dashboard / CLI / History
+      +--> Dashboard / CLI / History / Baseline
       |
       +--> AiFixer (optional)
                 |

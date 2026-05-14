@@ -26,6 +26,18 @@ return [
         'local',
     ],
 
+    'locale' => env('LENS_FOR_LARAVEL_LOCALE', app()->getLocale()),
+
+    'fallback_locale' => env('LENS_FOR_LARAVEL_FALLBACK_LOCALE', 'en'),
+
+    'supported_locales' => [
+        'en' => 'English',
+        'pl' => 'Polski',
+        'es' => 'Español',
+        'fr' => 'Français',
+        'de' => 'Deutsch',
+    ],
+
     'editor' => env('LENS_FOR_LARAVEL_EDITOR', 'vscode'),
 
     'crawl_max_pages' => env('LENS_FOR_LARAVEL_CRAWL_MAX_PAGES', 50),
@@ -33,6 +45,10 @@ return [
     'crawler_render_javascript' => env('LENS_FOR_LARAVEL_CRAWLER_RENDER_JAVASCRIPT', false),
 
     'scan_wait_ms' => env('LENS_FOR_LARAVEL_SCAN_WAIT_MS', 0),
+
+    'baseline_path' => env('LENS_FOR_LARAVEL_BASELINE_PATH', storage_path('app/lens-for-laravel/baseline.json')),
+
+    'ignore_https_errors' => env('LENS_FOR_LARAVEL_IGNORE_HTTPS_ERRORS', false),
 
     'ai_provider' => env('LENS_FOR_LARAVEL_AI_PROVIDER', 'gemini'),
 ];
@@ -79,6 +95,50 @@ Lens returns `403 Forbidden` outside these environments.
 ```
 
 Do not enable Lens publicly in production.
+
+### `locale`
+
+**Type:** `string` | **Default:** `app()->getLocale()` | **Env:** `LENS_FOR_LARAVEL_LOCALE`
+
+Controls the default dashboard language.
+
+```text
+LENS_FOR_LARAVEL_LOCALE=pl
+```
+
+Users can change the language in the dashboard. Their selection is stored in the session.
+
+### `fallback_locale`
+
+**Type:** `string` | **Default:** `en` | **Env:** `LENS_FOR_LARAVEL_FALLBACK_LOCALE`
+
+Fallback language used when a translation key is missing in the active locale.
+
+```text
+LENS_FOR_LARAVEL_FALLBACK_LOCALE=en
+```
+
+### `supported_locales`
+
+**Type:** `array`
+
+Locales shown in the dashboard language switcher.
+
+Bundled locales:
+
+| Locale | Language |
+|--------|----------|
+| `en` | English |
+| `pl` | Polish |
+| `es` | Spanish |
+| `fr` | French |
+| `de` | German |
+
+Publish translations if you want to customize wording:
+
+```bash
+php artisan vendor:publish --tag="lens-for-laravel-translations"
+```
 
 ### `editor`
 
@@ -137,6 +197,30 @@ Useful for:
 - React lazy content
 - Vue delayed rendering
 
+### `baseline_path`
+
+**Type:** `string` | **Default:** `storage/app/lens-for-laravel/baseline.json` | **Env:** `LENS_FOR_LARAVEL_BASELINE_PATH`
+
+Default JSON file used by the CLI baseline quality gate.
+
+```text
+LENS_FOR_LARAVEL_BASELINE_PATH=.github/lens-baseline.json
+```
+
+Relative paths are resolved from the Laravel application base path. Absolute paths are used as provided.
+
+### `ignore_https_errors`
+
+**Type:** `bool` | **Default:** `false` | **Env:** `LENS_FOR_LARAVEL_IGNORE_HTTPS_ERRORS`
+
+When enabled, Browsershot ignores HTTPS certificate errors during scans.
+
+```text
+LENS_FOR_LARAVEL_IGNORE_HTTPS_ERRORS=true
+```
+
+Use this for local development environments with self-signed certificates, such as DDEV or Laravel Valet. Keep the default `false` when you want production-like certificate validation.
+
 ### `ai_provider`
 
 **Type:** `string` | **Default:** `gemini` | **Env:** `LENS_FOR_LARAVEL_AI_PROVIDER`
@@ -152,6 +236,28 @@ AI provider used by the AI Fix Engine.
 ```text
 LENS_FOR_LARAVEL_AI_PROVIDER=openai
 OPENAI_API_KEY=sk-...
+```
+
+## v2.1.0 Upgrade
+
+If you published the config before v2.1.0, add these keys manually:
+
+```php
+'locale' => env('LENS_FOR_LARAVEL_LOCALE', app()->getLocale()),
+
+'fallback_locale' => env('LENS_FOR_LARAVEL_FALLBACK_LOCALE', 'en'),
+
+'supported_locales' => [
+    'en' => 'English',
+    'pl' => 'Polski',
+    'es' => 'Español',
+    'fr' => 'Français',
+    'de' => 'Deutsch',
+],
+
+'baseline_path' => env('LENS_FOR_LARAVEL_BASELINE_PATH', storage_path('app/lens-for-laravel/baseline.json')),
+
+'ignore_https_errors' => env('LENS_FOR_LARAVEL_IGNORE_HTTPS_ERRORS', false),
 ```
 
 ## v2.0.0 Upgrade

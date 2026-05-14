@@ -6,7 +6,7 @@ Lens ships one Artisan command:
 php artisan lens:audit {url?*} [options]
 ```
 
-The CLI uses the same scanner, crawler, source locator, and `sourceType` metadata as the dashboard.
+The CLI uses the same scanner, crawler, source locator, and `sourceType` metadata as the dashboard. It can also create and enforce accessibility baselines for CI.
 
 ## Arguments
 
@@ -71,6 +71,50 @@ php artisan lens:audit https://your-app.test --aa --threshold=0
 | 3 | 5 | `0` |
 | 6 | 5 | `1` |
 
+### `--baseline`
+
+Write the current filtered violations to a baseline file and exit successfully.
+
+```bash
+php artisan lens:audit https://your-app.test --crawl --baseline
+```
+
+The baseline includes issue fingerprints and scan metadata. Use this after reviewing and accepting the current accessibility state of an existing project.
+
+`--baseline` respects WCAG level filters:
+
+```bash
+php artisan lens:audit https://your-app.test --crawl --aa --baseline
+```
+
+### `--baseline-file=PATH`
+
+Use a custom baseline path instead of the configured default.
+
+```bash
+php artisan lens:audit https://your-app.test --crawl --baseline --baseline-file=.github/lens-baseline.json
+```
+
+Relative paths are resolved from the Laravel application base path.
+
+### `--fail-on-new`
+
+Compare current violations against the baseline and fail only when new violations appear.
+
+```bash
+php artisan lens:audit https://your-app.test --crawl --fail-on-new
+```
+
+Exit behavior:
+
+| Result | Exit Code |
+|--------|-----------|
+| No new violations | `0` |
+| One or more new violations | `1` |
+| Baseline file missing or invalid | `1` |
+
+`--baseline` and `--fail-on-new` cannot be used together.
+
 ## Examples
 
 ```bash
@@ -89,6 +133,50 @@ php artisan lens:audit \
   https://your-app.test/register \
   https://your-app.test/dashboard \
   --aa --threshold=0
+
+# create a reviewed baseline
+php artisan lens:audit https://your-app.test --crawl --aa --baseline
+
+# fail only when new violations appear
+php artisan lens:audit https://your-app.test --crawl --aa --fail-on-new
+
+# store the baseline in a custom path
+php artisan lens:audit https://your-app.test --crawl --baseline-file=.github/lens-baseline.json --fail-on-new
+```
+
+## Baseline Fingerprints
+
+Lens compares issues using stable fingerprints built from:
+
+- axe rule ID
+- normalized URL path and query
+- interactive state label
+- CSS selector
+- source file
+- source type
+
+The URL scheme and host are ignored during fingerprinting. This allows a baseline created from `https://app.test/about` to match a CI scan running against `http://127.0.0.1:8000/about`.
+
+## Baseline Workflow
+
+Use this flow for projects that already have accessibility issues:
+
+1. Run a full scan locally.
+2. Review the current violations.
+3. Save the reviewed state with `--baseline`.
+4. Commit the baseline file if you want CI to use it.
+5. Run `--fail-on-new` in CI.
+
+Example:
+
+```bash
+php artisan lens:audit https://your-app.test --crawl --aa --baseline --baseline-file=.github/lens-baseline.json
+```
+
+Then in CI:
+
+```bash
+php artisan lens:audit http://127.0.0.1:8000 --crawl --aa --fail-on-new --baseline-file=.github/lens-baseline.json
 ```
 
 ## GitHub Actions Example
@@ -129,6 +217,48 @@ jobs:
 
       - name: Run accessibility audit
         run: php artisan lens:audit http://127.0.0.1:8000 --aa --threshold=0
+        env:
+          APP_ENV: testing
+```
+
+## GitHub Actions Baseline Example
+
+```yaml
+name: Accessibility Regression Audit
+
+on: [push, pull_request]
+
+jobs:
+  a11y:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction
+
+      - name: Install Puppeteer
+        run: npm install puppeteer --save-dev
+
+      - name: Prepare app
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate --force
+
+      - name: Start dev server
+        run: php artisan serve --host=127.0.0.1 --port=8000 &
+        env:
+          APP_ENV: testing
+          APP_URL: http://127.0.0.1:8000
+
+      - name: Run accessibility regression audit
+        run: php artisan lens:audit http://127.0.0.1:8000 --crawl --aa --fail-on-new --baseline-file=.github/lens-baseline.json
         env:
           APP_ENV: testing
 ```

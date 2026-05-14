@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Lens for Laravel — WCAG Accessibility Auditor</title>
     <meta name="description"
-        content="Local-first WCAG accessibility auditor for Laravel. Maps violations to Blade, React, and Vue source files and generates AI-assisted fixes.">
+        content="Local-first WCAG accessibility auditor for Laravel. Maps violations to Blade, React, and Vue source files, scans interactive states, and supports CI baselines.">
 
     {{-- Anti-FOUC: apply saved theme before first paint --}}
     <script>
@@ -94,7 +94,7 @@
                 <span class="text-black dark:text-white font-black text-lg tracking-[0.15em] uppercase">LENS FOR</span>
                 <span class="text-[#e53e3e] font-black text-lg tracking-[0.15em] uppercase">LARAVEL</span>
                 <span
-                    class="ml-2 hidden sm:inline text-black/20 dark:text-white/20 text-[10px] font-mono border border-black/20 dark:border-white/20 px-1.5 py-0.5 leading-none">v2.0</span>
+                    class="ml-2 hidden sm:inline text-black/20 dark:text-white/20 text-[10px] font-mono border border-black/20 dark:border-white/20 px-1.5 py-0.5 leading-none">v2.1</span>
             </div>
 
             <div class="flex items-center gap-3">
@@ -160,8 +160,8 @@
 
             <p
                 class="mt-10 text-black/50 dark:text-white/40 font-mono text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-                Local-first WCAG auditor for Blade, Livewire, React, Vue, and Inertia. Maps violations to source files
-                and generates AI-assisted fixes.
+                Local-first WCAG auditor for Blade, Livewire, React, Vue, and Inertia. Maps violations to source files,
+                scans interactive UI states, and supports CI baselines.
             </p>
         </div>
 
@@ -216,7 +216,7 @@
             </div>
 
             <div class="p-8">
-                <div class="text-5xl font-black font-mono text-black dark:text-white">108</div>
+                <div class="text-5xl font-black font-mono text-black dark:text-white">145</div>
                 <div class="text-[10px] font-mono tracking-widest text-black/40 dark:text-white/40 mt-2 uppercase">Tests
                     Passing</div>
             </div>
@@ -260,8 +260,8 @@
                 <h3 class="font-mono font-black text-3xl text-black dark:text-white leading-tight">
                     Multi-mode<br>Scanning</h3>
                 <p class="mt-4 text-black/50 dark:text-white/50 font-mono text-sm leading-relaxed">
-                    Target a single page, a list of URLs, or let Lens crawl your entire site via sitemap.xml and BFS
-                    link discovery. Enable JavaScript crawling for SPA and Inertia apps.
+                    Target a single page, a list of URLs, crawl your entire site, or scan states after UI interactions.
+                    Enable JavaScript crawling for SPA and Inertia apps.
                 </p>
                 <div class="mt-8 flex flex-col gap-2">
                     <div
@@ -284,6 +284,13 @@
                         class="border-2 border-[#e53e3e] bg-[#e53e3e] text-white px-4 py-3 font-mono text-xs flex items-center justify-between cursor-default">
                         <span class="font-bold">WHOLE_WEBSITE</span>
                         <span class="text-white/60 text-[10px]">--crawl flag</span>
+                    </div>
+                    <div
+                        class="group border-2 border-black dark:border-white/20 px-4 py-3 font-mono text-xs flex items-center justify-between hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black transition-colors cursor-default">
+                        <span
+                            class="font-bold text-black dark:text-white group-hover:text-white dark:group-hover:text-black">INTERACTIVE_STATES</span>
+                        <span
+                            class="text-black/30 dark:text-white/30 group-hover:text-white/50 dark:group-hover:text-black/50 text-[10px]">click/type/wait</span>
                     </div>
                 </div>
             </div>
@@ -329,11 +336,11 @@
                 <h3 class="font-mono font-black text-3xl text-black dark:text-white leading-tight">CLI<br>First</h3>
                 <p class="mt-4 text-black/50 dark:text-white/50 font-mono text-sm leading-relaxed">
                     A first-class Artisan command with WCAG filters, crawl mode, source mapping, SPA-friendly options,
-                    and CI quality gates.
+                    thresholds, and baseline quality gates.
                 </p>
                 {{-- Always-dark code block (terminal) --}}
                 <div class="mt-8 bg-black text-white p-5 font-mono text-xs leading-relaxed">
-                    <div class="text-white/30 mb-3"># Full audit with CI quality gate</div>
+                    <div class="text-white/30 mb-3"># Regression-only CI quality gate</div>
                     <div><span class="text-[#e53e3e]">$</span> <span class="text-white">php artisan lens:audit
                             \</span></div>
                     <div class="ml-5 text-white/60">&nbsp;&nbsp;https://your-app.test \</div>
@@ -341,11 +348,11 @@
                             A + AA</span></div>
                     <div class="ml-5"><span class="text-yellow-400">--crawl</span> <span class="text-white/30">#
                             Scan entire site</span></div>
-                    <div class="ml-5"><span class="text-yellow-400">--threshold=0</span> <span
-                            class="text-white/30"># Fail CI</span></div>
+                    <div class="ml-5"><span class="text-yellow-400">--fail-on-new</span> <span
+                            class="text-white/30"># Fail on regressions</span></div>
                 </div>
                 <div class="mt-4 flex flex-wrap gap-2">
-                    @foreach (['--a', '--aa', '--all', '--crawl', '--threshold=N'] as $flag)
+                    @foreach (['--a', '--aa', '--all', '--crawl', '--threshold=N', '--baseline', '--fail-on-new'] as $flag)
                         <span
                             class="border border-black/20 dark:border-white/20 px-2 py-1 font-mono text-[10px] text-black/40 dark:text-white/40">{{ $flag }}</span>
                     @endforeach
@@ -519,6 +526,9 @@
                             <div
                                 class="border border-white/20 text-white/30 px-3 py-1 font-mono text-[10px] uppercase">
                                 MULTIPLE_URLS</div>
+                            <div
+                                class="border border-white/20 text-white/30 px-3 py-1 font-mono text-[10px] uppercase">
+                                INTERACTIVE_STATES</div>
                         </div>
                         <div class="flex overflow-hidden">
                             <div

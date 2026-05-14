@@ -1,6 +1,6 @@
 # Frontend Support
 
-Lens v2.0.0 supports Laravel applications using Blade, Livewire, React, Vue, Inertia, or mixed frontends.
+Lens supports Laravel applications using Blade, Livewire, React, Vue, Inertia, or mixed frontends.
 
 ## Blade
 
@@ -28,7 +28,16 @@ Livewire is supported through the rendered DOM and Blade locator. For delayed re
 LENS_FOR_LARAVEL_SCAN_WAIT_MS=500
 ```
 
-Lens scans the page state after load. Interactive states such as open modals, expanded menus, validation errors, and active tabs still need targeted test flows or manual review.
+Lens scans the page state after load. For open modals, expanded menus, validation errors, active tabs, and similar interaction-only UI, use interactive state scans.
+
+Example:
+
+```text
+state: Validation errors
+type: input[name="email"] => invalid@example.test
+click: button[type="submit"]
+wait: 300
+```
 
 ## React
 
@@ -84,6 +93,8 @@ For link discovery in SPA-heavy apps, enable JavaScript crawling:
 LENS_FOR_LARAVEL_CRAWLER_RENDER_JAVASCRIPT=true
 ```
 
+For stateful client-side UI, use interactive state scans to run axe-core after clicks, typing, selections, and waits.
+
 ## Source Type
 
 When Lens locates a source file, issues include:
@@ -105,6 +116,21 @@ Possible `sourceType` values:
 
 The dashboard shows the source type next to the source location, and history stores it with each issue.
 
+## Interactive State Labels
+
+Issues found during interactive state scans include the state label:
+
+```json
+{
+  "fileName": "js/Components/MobileMenu.vue",
+  "lineNumber": 18,
+  "sourceType": "vue",
+  "stateLabel": "Navigation open"
+}
+```
+
+The dashboard, scan history, PDF reports, and scan comparison preserve this value. This matters when the same selector appears in multiple UI states.
+
 ## Limitations
 
 Source mapping is heuristic. Lens can miss or misidentify source files when markup is deeply abstracted or generated at runtime.
@@ -115,6 +141,6 @@ Common difficult cases:
 - CSS modules where final class names do not resemble source keys
 - dynamic class builders without literal class names
 - runtime-generated attributes
-- UI states that appear only after user interaction
+- UI states that require long or complex workflows beyond the recorder/script model
 
 For those cases, use the DOM selector and screenshot preview to guide manual investigation.

@@ -29,7 +29,7 @@ http://your-app.test/lens-for-laravel/dashboard
 Then:
 
 1. Enter a URL from the same host as `APP_URL`.
-2. Choose **Single URL**, **Multiple URLs**, or **Whole Website**.
+2. Choose **Single URL**, **Multiple URLs**, **Whole Website**, or **Interactive States**.
 3. Run the scan.
 4. Inspect WCAG level cards and violation details.
 5. Preview the failing element.
@@ -49,7 +49,8 @@ Then:
   "url": "http://your-app.test",
   "fileName": "js/Components/Logo.vue",
   "lineNumber": 12,
-  "sourceType": "vue"
+  "sourceType": "vue",
+  "stateLabel": null
 }
 ```
 
@@ -59,6 +60,8 @@ Then:
 - `react`
 - `vue`
 - `null` when no source location is found
+
+`stateLabel` is set when an issue comes from an interactive state scan.
 
 ## Focus on A and AA First
 
@@ -97,3 +100,30 @@ php artisan lens:audit http://your-app.test --aa --threshold=0
 ```
 
 Exit code `1` means the violation count exceeded the threshold. Exit code `0` means the gate passed.
+
+For existing projects with known accessibility debt, use a baseline instead:
+
+```bash
+php artisan lens:audit http://your-app.test --crawl --baseline
+php artisan lens:audit http://your-app.test --crawl --fail-on-new
+```
+
+The first command writes the reviewed current state. The second command fails only when new violations appear.
+
+## First Interactive State Scan
+
+Use interactive states when a violation appears only after opening a menu, submitting an invalid form, expanding a tab, or triggering another UI state.
+
+In the dashboard, choose **Interactive States**, open the recorder, interact with the page, and send the generated script back to Lens.
+
+You can also write a script manually:
+
+```text
+state: Navigation open
+click: [data-menu-button]
+
+state: Form validation
+type: input[name="email"] => invalid@example.test
+click: button[type="submit"]
+wait: 300
+```

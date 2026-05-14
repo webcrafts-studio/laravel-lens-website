@@ -1,6 +1,6 @@
 # Scanning Modes
 
-Lens supports three scan modes in both the dashboard and CLI.
+Lens supports single URL, multiple URL, and whole-site scans in both the dashboard and CLI. The dashboard also supports interactive state scans for UI that appears after user interaction.
 
 ## Single URL
 
@@ -52,6 +52,106 @@ Lens seeds URLs from:
 Then it follows internal `<a href>` links until the queue is empty or `crawl_max_pages` is reached.
 
 By default, link discovery uses Laravel's HTTP client and parses the initial HTML. This is fast and works well for server-rendered pages.
+
+## Interactive State Scans
+
+Interactive state scans run axe-core after Lens performs browser actions. Use them for accessibility issues that only appear after UI interaction.
+
+Common examples:
+
+- mobile navigation after the menu is opened
+- validation errors after submitting a form
+- modal dialogs after clicking a trigger
+- tabs and accordions after selecting a panel
+- dropdowns and comboboxes after expanding the control
+- Livewire, React, Vue, or Inertia states that are not visible on initial load
+
+Interactive state scans are available in the dashboard through the **Interactive States** scan mode.
+
+## State Recorder
+
+The dashboard includes a visual recorder. It opens the target page in a recorder view, lets you interact with it, and generates a reusable interaction script.
+
+Typical workflow:
+
+1. Open the dashboard.
+2. Select **Interactive States**.
+3. Enter a target URL from the same host as `APP_URL`.
+4. Click **Record**.
+5. Interact with the target page.
+6. Create named states as you move through the flow.
+7. Send the generated script back to Lens.
+8. Run the scan.
+
+## Interaction Script Format
+
+Interactive scripts are plain text, so they can be copied, reviewed, committed, and reused.
+
+```text
+state: Navigation open
+click: [data-menu-button]
+
+state: Form validation
+type: input[name="email"] => invalid@example.test
+click: button[type="submit"]
+wait: 300
+```
+
+Each `state:` starts a named state. The actions below that line are executed before axe-core scans the page.
+
+### Supported Actions
+
+| Action | Format | Description |
+|--------|--------|-------------|
+| `click` | `click: selector` | Clicks an element and prevents navigation/submission during the action. |
+| `type` | `type: selector => value` | Sets an input value and dispatches `input` and `change` events. |
+| `select` | `select: selector => value` | Sets a select value and dispatches `input` and `change` events. |
+| `check` | `check: selector` | Checks a checkbox or radio input. |
+| `uncheck` | `uncheck: selector` | Unchecks a checkbox. |
+| `wait` | `wait: 300` | Waits the given number of milliseconds. |
+
+You can also use space-based shorthand:
+
+```text
+state "Search results"
+type input[name="q"] "pricing"
+click button[type="submit"]
+```
+
+For `type` and `select`, the preferred delimiter is `=>`, but `|` is also accepted:
+
+```text
+select: select[name="country"] | PL
+```
+
+### Script Limits
+
+Interactive scripts are validated before execution:
+
+| Limit | Value |
+|-------|-------|
+| Maximum states | 10 |
+| Maximum actions | 30 |
+| Maximum state label length | 80 characters |
+| Maximum selector length | 500 characters |
+| Maximum typed/selected value length | 1000 characters |
+| Maximum wait duration | 5000ms |
+
+Invalid scripts return a validation error before any scan runs.
+
+### State Labels
+
+Issues found during interactive scans include `stateLabel`:
+
+```json
+{
+  "id": "button-name",
+  "selector": ".modal button.close",
+  "stateLabel": "Modal open"
+}
+```
+
+History, PDF reports, and scan comparison preserve this state label. The same selector can therefore be treated as a different issue when it appears in different UI states.
 
 ## SPA and Inertia Crawling
 
@@ -115,3 +215,27 @@ php artisan lens:audit https://staging.app.test --aa --threshold=0
 - name: Run accessibility audit
   run: php artisan lens:audit ${{ env.APP_URL }} --aa --threshold=0
 ```
+
+## Baseline Quality Gate
+
+Use a baseline when the project already has known violations and CI should fail only on new regressions.
+
+Create or refresh the baseline after reviewing the current scan:
+
+```bash
+php artisan lens:audit https://your-app.test --crawl --baseline
+```
+
+Compare the current scan against the baseline:
+
+```bash
+php artisan lens:audit https://your-app.test --crawl --fail-on-new
+```
+
+Use a custom baseline file when you want to commit it into a specific path:
+
+```bash
+php artisan lens:audit https://your-app.test --crawl --fail-on-new --baseline-file=.github/lens-baseline.json
+```
+
+Baseline fingerprints include the rule, normalized URL path, state label, selector, source file, and source type. The host and scheme are normalized so local and CI URLs can be compared.

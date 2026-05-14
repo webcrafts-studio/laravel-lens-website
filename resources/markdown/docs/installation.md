@@ -38,7 +38,7 @@ Lens is a developer tool and should normally be installed as a dev dependency.
 
 ## Run Migrations
 
-v2.0.0 includes scan history and scan comparison. Run migrations:
+Run migrations to install scan history tables and v2.1 interactive state metadata:
 
 ```bash
 php artisan migrate
@@ -62,24 +62,38 @@ Optionally publish package views:
 php artisan vendor:publish --tag="lens-for-laravel-views"
 ```
 
+Optionally publish package translations:
+
+```bash
+php artisan vendor:publish --tag="lens-for-laravel-translations"
+```
+
 ## Environment Variables
 
 Add only the options you need:
 
 ```text
 LENS_FOR_LARAVEL_EDITOR=vscode
+LENS_FOR_LARAVEL_LOCALE=en
+LENS_FOR_LARAVEL_FALLBACK_LOCALE=en
 LENS_FOR_LARAVEL_CRAWL_MAX_PAGES=50
 LENS_FOR_LARAVEL_CRAWLER_RENDER_JAVASCRIPT=false
 LENS_FOR_LARAVEL_SCAN_WAIT_MS=0
+LENS_FOR_LARAVEL_BASELINE_PATH=storage/app/lens-for-laravel/baseline.json
+LENS_FOR_LARAVEL_IGNORE_HTTPS_ERRORS=false
 LENS_FOR_LARAVEL_AI_PROVIDER=gemini
 ```
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `LENS_FOR_LARAVEL_EDITOR` | `vscode` | IDE used when opening source files from the dashboard. |
+| `LENS_FOR_LARAVEL_LOCALE` | app locale | Default dashboard locale. |
+| `LENS_FOR_LARAVEL_FALLBACK_LOCALE` | `en` | Fallback locale used when a translation key is missing. |
 | `LENS_FOR_LARAVEL_CRAWL_MAX_PAGES` | `50` | Maximum pages discovered in whole-site mode. |
 | `LENS_FOR_LARAVEL_CRAWLER_RENDER_JAVASCRIPT` | `false` | Render JavaScript while crawling SPA/Inertia links. |
 | `LENS_FOR_LARAVEL_SCAN_WAIT_MS` | `0` | Extra delay after network idle before axe-core runs. |
+| `LENS_FOR_LARAVEL_BASELINE_PATH` | `storage/app/lens-for-laravel/baseline.json` | Default file used by the baseline quality gate. |
+| `LENS_FOR_LARAVEL_IGNORE_HTTPS_ERRORS` | `false` | Ignore self-signed HTTPS certificate errors during local scans. |
 | `LENS_FOR_LARAVEL_AI_PROVIDER` | `gemini` | AI provider for fix suggestions. |
 
 ## AI Provider Keys
